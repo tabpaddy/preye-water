@@ -11,6 +11,6 @@ class RoleSeeder extends Seeder
     {
         Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'staff']);
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'staff']);
-        $manager->syncPermissions(['view dashboard', 'view staff', 'view business settings']);
+        $manager->givePermissionTo(['view dashboard', 'view staff', 'view business settings', 'view departments', 'view job positions', 'view staff employment details', 'view work shifts', 'view shift assignments', 'view attendance', 'view leave types', 'view leave requests']);
     }
 }
