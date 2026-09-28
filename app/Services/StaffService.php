@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class StaffService
 {
@@ -70,6 +71,9 @@ class StaffService
                 $staff->remember_token = null;
             }
             if (isset($data['status'])) {
+                if (in_array($data['status'], [StaffStatus::ACTIVE, StaffStatus::ACTIVE->value], true) && $staff->employmentDetail()->whereNotNull('termination_date')->exists()) {
+                    throw ValidationException::withMessages(['status' => 'Resolve the employment termination before reactivating this account.']);
+                }
                 $staff->status = $data['status'];
             }
             $staff->save();
