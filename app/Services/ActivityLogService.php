@@ -27,7 +27,7 @@ class ActivityLogService
     private function sanitize(array $values): array
     {
         foreach ($values as $key => $value) {
-            if (preg_match('/password|token|secret|api.?key|authorization/i', (string) $key)) {
+            if (preg_match('/password|token|secret|api.?key|authorization|bank|basic_salary|pay_frequency|emergency_contact/i', (string) $key)) {
                 unset($values[$key]);
             } elseif (is_array($value)) {
                 $values[$key] = $this->sanitize($value);
