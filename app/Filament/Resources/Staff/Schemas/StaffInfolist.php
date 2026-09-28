@@ -11,7 +11,7 @@ class StaffInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->components([
+            ->components([...StaffEmploymentInfolist::components(),
                 TextEntry::make('staff_number'),
                 TextEntry::make('person.full_name')->label('Name'),
                 TextEntry::make('person.email'),

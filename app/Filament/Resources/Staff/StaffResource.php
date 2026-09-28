@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Staff;
 use App\Filament\Resources\Staff\Pages\CreateStaff;
 use App\Filament\Resources\Staff\Pages\EditStaff;
 use App\Filament\Resources\Staff\Pages\ListStaff;
+use App\Filament\Resources\Staff\Pages\StaffEmployment;
 use App\Filament\Resources\Staff\Pages\ViewStaff;
 use App\Filament\Resources\Staff\Schemas\StaffForm;
 use App\Filament\Resources\Staff\Schemas\StaffInfolist;
@@ -57,7 +58,7 @@ class StaffResource extends Resource
         return [
             'index' => ListStaff::route('/'),
             'create' => CreateStaff::route('/create'),
-            'view' => ViewStaff::route('/{record}'),
+            'view' => ViewStaff::route('/{record}'), 'employment' => StaffEmployment::route('/{record}/employment'),
             'edit' => EditStaff::route('/{record}/edit'),
         ];
     }
