@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Enums;
+
+enum StockMovementType: string
+{
+    case SUPPLIER_RECEIPT_IN = 'SUPPLIER_RECEIPT_IN';
+    case PRODUCTION_CONSUMPTION = 'PRODUCTION_CONSUMPTION';
+    case PRODUCTION_IN = 'PRODUCTION_IN';
+    case TRANSFER = 'TRANSFER';
+    case SALE_OUT = 'SALE_OUT';
+    case CUSTOMER_RETURN_IN = 'CUSTOMER_RETURN_IN';
+    case DAMAGE_OUT = 'DAMAGE_OUT';
+    case ADJUSTMENT_IN = 'ADJUSTMENT_IN';
+    case ADJUSTMENT_OUT = 'ADJUSTMENT_OUT';
+    case REVERSAL = 'REVERSAL';
+}
