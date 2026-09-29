@@ -91,7 +91,7 @@ class SettingsFoundationTest extends TestCase
     public function test_seeders_are_idempotent(): void
     {
         $this->seed();
-        foreach (['businesses' => 1, 'business_settings' => 1, 'number_sequences' => 2, 'permissions' => 40, 'roles' => 2, 'staff' => 0] as $table => $count) {
+        foreach (['businesses' => 1, 'business_settings' => 1, 'number_sequences' => 3, 'permissions' => 65, 'roles' => 2, 'staff' => 0] as $table => $count) {
             $this->assertDatabaseCount($table, $count);
         }
     }
