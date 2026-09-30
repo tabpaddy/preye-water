@@ -67,7 +67,7 @@ class WorkforceIntegrityTest extends TestCase
         $this->seed();
         $this->assertTrue($manager->fresh()->hasPermissionTo('record attendance'));
         $this->assertFalse($manager->fresh()->hasPermissionTo('view staff salaries'));
-        $this->assertDatabaseCount('number_sequences', 3);
-        $this->assertDatabaseCount('permissions', 65);
+        $this->assertDatabaseCount('number_sequences', 8);
+        $this->assertDatabaseCount('permissions', 89);
     }
 }
