@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\GoodsReceiptStatus;
 use App\Enums\StockAdjustmentStatus;
 use App\Enums\StockMovementType;
+use App\Models\GoodsReceipt;
 use App\Models\InventoryItem;
 use App\Models\InventoryLocation;
 use App\Models\InventoryStock;
@@ -98,6 +100,38 @@ class InventoryService
         return InventoryStock::where('inventory_item_id', $item->id)->where('inventory_location_id', $location->id)->first()?->available_quantity ?? '0.000';
     }
 
+    /**
+     * Trusted document integration. GoodsReceiptService owns PO validation and
+     * the outer transaction; this method owns physical balances and ledger writes.
+     */
+    public function postGoodsReceipt(GoodsReceipt $receipt, Staff $actor): void
+    {
+        Gate::forUser($actor)->authorize('post goods receipts');
+        if (DB::transactionLevel() === 0) {
+            throw new \LogicException('Goods receipt posting requires a transaction.');
+        }
+        $receipt = GoodsReceipt::whereKey($receipt->id)->lockForUpdate()->firstOrFail();
+        if ($receipt->status !== GoodsReceiptStatus::INSPECTED) {
+            $this->fail('Only inspected goods receipts can be posted.');
+        }
+        $items = $receipt->items()->orderBy('inventory_item_id')->get();
+        if ($items->isEmpty()) {
+            $this->fail('The receipt has no items.');
+        }
+        $stocks = $this->lockStocks($items->pluck('inventory_item_id')->all(), [$receipt->inventory_location_id]);
+        foreach ($items as $line) {
+            if (BigDecimal::of($line->quantity_accepted)->isZero()) {
+                continue;
+            }
+            $this->move($stocks[$line->inventory_item_id.':'.$receipt->inventory_location_id], null,
+                $line->quantity_accepted, $line->unit_cost, StockMovementType::SUPPLIER_RECEIPT_IN, $actor, [
+                    'reference_type' => GoodsReceipt::class, 'reference_id' => $receipt->id,
+                    'reference_number' => $receipt->goods_receipt_number, 'notes' => $receipt->supplier_delivery_note,
+                ], $receipt->received_at);
+        }
+        $receipt->update(['status' => GoodsReceiptStatus::POSTED, 'posted_by' => $actor->id, 'posted_at' => now()]);
+    }
+
     /** Internal read under the caller's transaction; creates only a zero balance. */
     public function snapshot(int $itemId, int $locationId): InventoryStock
     {
@@ -176,7 +210,7 @@ class InventoryService
         return $stocks;
     }
 
-    private function move(?InventoryStock $to, ?InventoryStock $from, string $quantity, ?string $cost, StockMovementType $type, Staff $actor, array $reference = []): StockMovement
+    private function move(?InventoryStock $to, ?InventoryStock $from, string $quantity, ?string $cost, StockMovementType $type, Staff $actor, array $reference = [], ?\DateTimeInterface $occurredAt = null): StockMovement
     {
         $quantity = Decimal::value($quantity, 3, true);
         if ($from) {
@@ -211,7 +245,7 @@ class InventoryService
             'inventory_item_id' => ($from ?? $to)->inventory_item_id,
             'from_location_id' => $from?->inventory_location_id, 'to_location_id' => $to?->inventory_location_id,
             'movement_type' => $type, 'quantity' => $quantity, 'unit_cost' => $cost, 'total_cost' => Decimal::cost($quantity, $cost),
-            'performed_by' => $actor->id, 'occurred_at' => now(),
+            'performed_by' => $actor->id, 'occurred_at' => $occurredAt ?? now(),
         ]));
     }
 
